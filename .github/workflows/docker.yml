@@ -79,11 +79,13 @@ jobs:
       - name: Build and push (amd64/arm64)
         if: steps.compare.outputs.changed == 'true'
         run: |
+          IMAGE_TAG="$(TZ=Asia/Tokyo date +%Y-%m-%d)-${GITHUB_SHA:0:7}"
+
           docker buildx build \
               --pull \
               --no-cache \
               --platform linux/amd64,linux/arm64 \
               --tag "$IMAGE:latest" \
-              --tag "$IMAGE:${GITHUB_SHA}" \
+              --tag "$IMAGE:${IMAGE_TAG}" \
               --push \
               .

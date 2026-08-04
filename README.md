@@ -35,7 +35,7 @@ docker build --pull --no-cache --tag check-docker .
 3. candidate と Docker Hub 上の既存 `latest`（amd64 ランナー上なので `docker pull` は自動的に amd64 版を取得する）それぞれから `image-packages.txt` を取り出して比較する。
    - パッケージ一覧が同一なら push しない（イメージのビルド日時などメタデータだけの差分は無視される）。
    - 一覧に差分がある場合、または `latest` が未公開の場合のみ push する。
-4. push 時は `docker buildx build --platform linux/amd64,linux/arm64 --push` でマルチアーキイメージを再ビルドし、`latest` と `${GITHUB_SHA}` タグを付ける。
+4. push 時は `docker buildx build --platform linux/amd64,linux/arm64 --push` でマルチアーキイメージを再ビルドし、`latest` と `YYYY-MM-DD-<short-sha>`（JST 日付 + commit SHA 先頭 7 桁、例: `2026-08-04-1a2b3c4`）タグを付ける。
 
 パッケージ一覧の比較は amd64 版だけを代表として使う（簡易方針）。amd64/arm64 でパッケージ構成が食い違うケースは検出対象外。
 
