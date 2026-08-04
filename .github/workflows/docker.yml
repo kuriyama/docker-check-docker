@@ -22,17 +22,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build candidate
+      - name: Build candidate (amd64)
         run: |
-          docker build \
+          docker buildx build \
               --pull \
               --no-cache \
+              --platform linux/amd64 \
+              --load \
               --tag candidate:latest \
               .
 
@@ -68,14 +76,14 @@ jobs:
               echo "No published image found"
           fi
 
-      - name: Push image
+      - name: Build and push (amd64/arm64)
         if: steps.compare.outputs.changed == 'true'
-        shell: sh
         run: |
-          set -eu
-
-          docker tag candidate:latest "$IMAGE:latest"
-          docker tag candidate:latest "$IMAGE:${GITHUB_SHA}"
-
-          docker push "$IMAGE:latest"
-          docker push "$IMAGE:${GITHUB_SHA}"
+          docker buildx build \
+              --pull \
+              --no-cache \
+              --platform linux/amd64,linux/arm64 \
+              --tag "$IMAGE:latest" \
+              --tag "$IMAGE:${GITHUB_SHA}" \
+              --push \
+              .

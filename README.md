@@ -31,10 +31,13 @@ docker build --pull --no-cache --tag check-docker .
 `.github/workflows/docker.yml` が以下を行う。
 
 1. デフォルトブランチへの push（`Dockerfile` / workflow 変更時）、毎日 03:17 JST の定期実行、手動実行（`workflow_dispatch`）で起動。
-2. `--pull --no-cache` で candidate イメージをビルドし、常に最新の `alpine:3.23` ベースおよび最新の `docker-cli` / `check-docker` を取得する。
-3. candidate と Docker Hub 上の既存 `latest` それぞれから `image-packages.txt` を取り出して比較する。
+2. `--pull --no-cache --platform linux/amd64` で candidate イメージをビルドし、常に最新の `alpine:3.23` ベースおよび最新の `docker-cli` / `check-docker` を取得する。
+3. candidate と Docker Hub 上の既存 `latest`（amd64 ランナー上なので `docker pull` は自動的に amd64 版を取得する）それぞれから `image-packages.txt` を取り出して比較する。
    - パッケージ一覧が同一なら push しない（イメージのビルド日時などメタデータだけの差分は無視される）。
-   - 一覧に差分がある場合、または `latest` が未公開の場合のみ `latest` と `${GITHUB_SHA}` タグを push する。
+   - 一覧に差分がある場合、または `latest` が未公開の場合のみ push する。
+4. push 時は `docker buildx build --platform linux/amd64,linux/arm64 --push` でマルチアーキイメージを再ビルドし、`latest` と `${GITHUB_SHA}` タグを付ける。
+
+パッケージ一覧の比較は amd64 版だけを代表として使う（簡易方針）。amd64/arm64 でパッケージ構成が食い違うケースは検出対象外。
 
 ### 必要な GitHub 設定
 
